@@ -26,7 +26,7 @@ class BankSimulator {
 
     // 랜덤 숫자를 생성하여 고객 도착 여부와 서비스 시간 자동 생성
     double Random() { return rand() / (double)RAND_MAX; }
-    bool IsNewCustomer() { return Random() > probArrival; }
+    bool IsNewCustomer() { return Random() < probArrival; }
     int RandServiceTime() { return (int)(tMaxService*Random()) + 1; }
 
     // 새로 도착한 고객을 큐에 삽입
@@ -57,22 +57,38 @@ public:
     // 시뮬레이션 실행
     void run() {
         int clock = 0;                // 현재 시각
-        int serviceTime = -1;        // 처리에 걸리는 잔여 시간
+        int a_service_time = -1;
+        int b_service_time = -1;      // 처리에 걸리는 잔여 시간
         while (clock < nSimulation) {
             clock++;
             printf("현재시각=%d\n", clock);
-
             if (IsNewCustomer())        // 새로운 고객이 도착했으면 큐에 삽입
                 InsertCustomer(clock);
-            if (serviceTime > 0) serviceTime--;            // 현재 고객 서비스 중
-            else {
+            
+            if (a_service_time < 0){
                 if (que.isEmpty()) continue;                // 기다라는 고객 없음
                 Customer a = que.dequeue();                // 새로 서비스 할 고객
                 nServedCustomers++;                        // 서비스한 고객 수
                 totalWaitTime += clock - a.tArrival;    // 총 대기시간
-                printf("    고객 %d 서비스 시작 (대기시간:%d분)\n",
-                    a.id, clock - a.tArrival);
-                serviceTime = a.tArrival - 1;
+                printf("    고객 %d A 창구에서 서비스 시작 (대기시간:%d분)\n",
+                       a.id, clock - a.tArrival);
+                a_service_time = a.tService-1;
+            }
+            else{
+                a_service_time--;
+            }
+            
+            if (b_service_time < 0){
+                if (que.isEmpty()) continue;                // 기다라는 고객 없음
+                Customer b = que.dequeue();                // 새로 서비스 할 고객
+                nServedCustomers++;                        // 서비스한 고객 수
+                totalWaitTime += clock - b.tArrival;    // 총 대기시간
+                printf("    고객 %d B 창구에서 서비스 시작 (대기시간:%d분)\n",
+                       b.id, clock - b.tArrival);
+                b_service_time = b.tService-1;
+            }
+            else{
+                b_service_time--;
             }
         }
     }
